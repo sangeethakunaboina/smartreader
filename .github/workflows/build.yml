@@ -1,0 +1,58 @@
+name: Build Kivy App for Android
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.8'
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential \
+            libssl-dev \
+            libffi-dev \
+            python3-dev \
+            python3-pip \
+            python3-setuptools \
+            python3-wheel \
+            git \
+            unzip \
+            zip \
+            openjdk-8-jdk \
+            libncurses5:i386 \
+            libstdc++6:i386 \
+            lib32z1 \
+            libbz2-1.0:i386 \
+            lib32ncurses6:i386 \
+            lib32stdc++6:i386 \
+            lib32z1:i386
+          python3 -m pip install --upgrade pip
+          python3 -m pip install buildozer
+
+      - name: Set up Android SDK and NDK
+        run: |
+          wget https://dl.google.com/android/repository/commandlinetools-linux-7583922_latest.zip
+          unzip commandlinetools-linux-7583922_latest.zip -d android-sdk
+          yes | android-sdk/cmdline-tools/bin/sdkmanager --sdk_root=android-sdk --licenses
+          android-sdk/cmdline-tools/bin/sdkmanager --sdk_root=android-sdk "platform-tools" "platforms;android-29" "build-tools;29.0.2" "ndk;21.3.6528147"
+
+      - name: Build APK
+        run: |
+          buildozer android debug
